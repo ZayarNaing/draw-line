@@ -11,3 +11,4 @@
 - When there are multiple lines on the image and if you want to clear them and start from fresh, press 'r'.
 
 ## The structure of the yaml file
+![alt text](https://github.com/ZayarNaing/draw-line/blob/main/sample_yaml.png)
