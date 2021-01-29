@@ -9,3 +9,5 @@
 - If the result/line is good enough for you press 'q' and the program will export the two endpoints of the latest line in a yaml file.
 - When you press 'q' and there is only one point of the latest line, the program will not save anything and will exit.
 - When there are multiple lines on the image and if you want to clear them and start from fresh, press 'r'.
+
+## The structure of the yaml file
