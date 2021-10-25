@@ -17,8 +17,8 @@ def save_point():
 	h, w, c = image.shape
 	points["startpoint"] = list(points["startpoint"])
 	points["endpoint"] = list(points["endpoint"])
-	points["startpoint"][0] = 0
-	points["endpoint"][0] = w
+	# points["startpoint"][0] = 0
+	# points["endpoint"][0] = w
 	with open(os.path.join(args.save_dir, args.name), 'w') as file:
 		entry = yaml.dump(points, file)
 
@@ -51,6 +51,13 @@ def click_event(event, x, y, flags, params):
 		else:
 			pass 
 	
+
+# Function to load configuration yaml file
+def load_config(config_path):
+    with open(config_path) as file:
+        config = yaml.safe_load(file)
+    return config
+
 if __name__=="__main__": 
 	"""
 	Draw a line on an image and export two endpoints of the line in a yaml file.
@@ -93,3 +100,13 @@ if __name__=="__main__":
 			print("Both endpoints are not present. Quitting.")
 	else:
 		print("Please provide a valid image's path.")
+	
+	cv2.namedWindow("After-image")
+	image = cv2.imread(args.img, 1)
+	entry = load_config(os.path.join(args.save_dir, args.name))
+	print(entry)
+	cv2.line(image, (entry['startpoint'][0], entry['startpoint'][1]), (entry['endpoint'][0], entry['endpoint'][1]), (234, 234, 234), 3)
+	cv2.imshow('image', image)
+	cv2.waitKey()
+	# close the window 
+	cv2.destroyAllWindows()
