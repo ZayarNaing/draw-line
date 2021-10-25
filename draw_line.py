@@ -104,7 +104,7 @@ if __name__=="__main__":
 	cv2.namedWindow("After-image")
 	image = cv2.imread(args.img, 1)
 	entry = load_config(os.path.join(args.save_dir, args.name))
-	print(entry)
+	print("[({}, {}), ({}, {})]".format(entry['startpoint'][0], entry['startpoint'][1], entry['endpoint'][0], entry['endpoint'][1]))
 	cv2.line(image, (entry['startpoint'][0], entry['startpoint'][1]), (entry['endpoint'][0], entry['endpoint'][1]), (234, 234, 234), 3)
 	cv2.imshow('image', image)
 	cv2.waitKey()
