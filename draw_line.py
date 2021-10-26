@@ -1,113 +1,91 @@
-# importing the module 
 import cv2 
-import yaml
 import argparse
 import os
+import yaml
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--img", type=str, help="path to image")
-parser.add_argument("--save_dir", type=str, help="directory where yaml file will be saved", default="./")
-parser.add_argument("--name", type=str, help="name of the yaml file", default="entry.yaml")
-args = parser.parse_args()
 
-# dictionary to store two endpoints of the line
-points = {}
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--img", type=str, help="path to image")
+    parser.add_argument("--save_dir", type=str, help="directory where yaml file will be saved", default="./")
+    parser.add_argument("--name", type=str, help="name of the yaml file", default="entry.yaml")
+    args = parser.parse_args()
+    return args
 
-def save_point():
-	h, w, c = image.shape
-	points["startpoint"] = list(points["startpoint"])
-	points["endpoint"] = list(points["endpoint"])
-	# points["startpoint"][0] = 0
-	# points["endpoint"][0] = w
-	with open(os.path.join(args.save_dir, args.name), 'w') as file:
-		entry = yaml.dump(points, file)
+drawing = False
+startpoint = None
+endpoint = None 
+second_click = False
 
-# function to display the coordinates of 
-# of the points clicked on the image 
-def click_event(event, x, y, flags, params): 
+def line_drawing(event, x, y, flags, params):
+    global startpoint, drawing, endpoint, second_click
+    if event == cv2.EVENT_LBUTTONDOWN:
+        if drawing == False:
+            drawing = True
+            second_click = False
+            startpoint = (x, y)
+        elif drawing == True:
+            drawing = False
+            second_click = True
+            endpoint = (x, y)
 
-	# checking for left mouse clicks 
-	if event == cv2.EVENT_LBUTTONDOWN: 
+    if event == cv2.EVENT_MOUSEMOVE:
+        endpoint = (x, y)
 
-		# displaying the coordinates 
-		# on the Shell 
-		# print(x, ' ', y)
+def export_points(s, e, save_dir, name):
+    """
+    Export two points of entry line to yaml file
 
-		# displaying the coordinates 
-		# on the image window 
-		font = cv2.FONT_HERSHEY_SIMPLEX 
-		cv2.putText(image, '.', (x,y), font, 
-					1, (255, 0, 0), 3) 
-		cv2.imshow('image', image) 
+    Parameters
+    ----------
+    s : tuple
+        (x, y) coordinates of start point of entry line
+    e : tuple
+        (x, y) coordinates of end point of entry line
+    """
+    points = {
+        "startpoint" : list(s),
+        "endpoint" : list(e)
+    }
+    with open(os.path.join(save_dir, name), 'w') as file:
+        entry = yaml.dump(points, file)
 
-		if "startpoint" not in points.keys() and "endpoint" not in points.keys():
-			points["startpoint"] = (x, y)
-		elif "startpoint" in points.keys() and "endpoint" not in points.keys():
-			points["endpoint"] = (x, y)
-			cv2.line(image, points["startpoint"], points["endpoint"], color=(0, 0, 0), thickness=3)
-		elif "startpoint" in points.keys() and "endpoint" in points.keys():
-			points.clear()
-			points["startpoint"] = (x, y)
-		else:
-			pass 
-	
+def main():
+    """
+    Main function
+    """
+    global drawing, startpoint, endpoint, second_click
+    args = parse_args()
+    # reading the image
+    image = cv2.imread(args.img, 1)
+    clone = image.copy()
+    cv2.namedWindow("IMAGE")
+    cv2.setMouseCallback("IMAGE", line_drawing)
 
-# Function to load configuration yaml file
-def load_config(config_path):
-    with open(config_path) as file:
-        config = yaml.safe_load(file)
-    return config
+    while True:
+        if drawing:
+            image = clone.copy()
+            cv2.line(image, startpoint, endpoint, (0,0,255), thickness=3)
 
-if __name__=="__main__": 
-	"""
-	Draw a line on an image and export two endpoints of the line in a yaml file.
-	"""
-	if os.path.isfile(args.img):
-		
-	
-		# reading the image
-		image = cv2.imread(args.img, 1)
-		clone = image.copy()
+        cv2.imshow("IMAGE", image)
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord('c') or key == ord('r'):
+            # press 'c' or 'r' to reset the window
+            startpoint = None
+            endpoint = None
+            drawing = False
+            image = clone.copy()
 
-		cv2.namedWindow("image")
-		# setting mouse hadler for the image 
-		# and calling the click_event() function 
-		cv2.setMouseCallback('image', click_event) 
+        if key == 13 or key == ord('q'):
+            # press 'q' or 'ENTER' to quit
+            if not(drawing == False and second_click == True):
+                print("Either one of two points missing. Exiting the program without saving the points.")
+            else:
+                print("Both points of entry line present.\n[{}, {}]\nSaving points to {}".format(startpoint, endpoint,args.save_dir + args.name))
+                export_points(startpoint, endpoint, args.save_dir, args.name)
+            break
 
-		while True:
-			# displaying the image 
-			cv2.imshow('image', image) 
-			key = cv2.waitKey(1) & 0xFF
+    cv2.destroyAllWindows()
 
-			# press 'r' to reset the window (fresh start)
-			if key == ord('r'):
-				points.clear()
-				image = clone.copy()
-
-			# if key == ord('d'):
-			# 	points.popitem()
-
-			# press 'q' to quit
-			if key == ord('q'):
-				break
-
-		# close the window 
-		cv2.destroyAllWindows()
-		if "startpoint" in points.keys() and "endpoint" in points.keys():
-			print("Both endpoints are present. Exporting them to yaml file.")
-			save_point()
-		else:
-			print("Both endpoints are not present. Quitting.")
-	else:
-		print("Please provide a valid image's path.")
-	
-	if "startpoint" in points.keys() and "endpoint" in points.keys():
-		cv2.namedWindow("After-image")
-		image = cv2.imread(args.img, 1)
-		entry = load_config(os.path.join(args.save_dir, args.name))
-		print("[({}, {}), ({}, {})]".format(entry['startpoint'][0], entry['startpoint'][1], entry['endpoint'][0], entry['endpoint'][1]))
-		cv2.line(image, (entry['startpoint'][0], entry['startpoint'][1]), (entry['endpoint'][0], entry['endpoint'][1]), (234, 234, 234), 3)
-		cv2.imshow('After-image', image)
-		cv2.waitKey()
-		# close the window 
-		cv2.destroyAllWindows()
+if __name__ == '__main__':
+    main()
