@@ -107,7 +107,7 @@ if __name__=="__main__":
 		entry = load_config(os.path.join(args.save_dir, args.name))
 		print("[({}, {}), ({}, {})]".format(entry['startpoint'][0], entry['startpoint'][1], entry['endpoint'][0], entry['endpoint'][1]))
 		cv2.line(image, (entry['startpoint'][0], entry['startpoint'][1]), (entry['endpoint'][0], entry['endpoint'][1]), (234, 234, 234), 3)
-		cv2.imshow('image', image)
+		cv2.imshow('After-image', image)
 		cv2.waitKey()
 		# close the window 
 		cv2.destroyAllWindows()
