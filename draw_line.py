@@ -74,6 +74,7 @@ def main():
             startpoint = None
             endpoint = None
             drawing = False
+            second_click = False
             image = clone.copy()
 
         if key == 13 or key == ord('q'):
